@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakesh Mali | AI-Driven Full-Stack Developer</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script src="https://unpkg.com/framer-motion@10.12.16/dist/framer-motion.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace'],
+                    },
+                    colors: {
+                        dark: '#030014',
+                        card: 'rgba(17, 25, 40, 0.75)',
+                        neonPurple: '#a855f7',
+                        neonCyan: '#06b6d4',
+                        neonPink: '#ec4899'
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { margin: 0; background-color: #030014; overflow-x: hidden; scroll-behavior: smooth; }
+        .glass-panel {
+            background: rgba(17, 25, 40, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .glass-panel-heavy {
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+        .text-glow {
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #030014; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a855f7; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, useScroll, useTransform, useSpring, useMotionValue } = window.Motion;
+
+        // --- 3D Background Component (Three.js) ---
+        // Keeps the neural network vibe which fits "AI Driven"
+        const ThreeBackground = () => {
+            const mountRef = useRef(null);
+
+            useEffect(() => {
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                mountRef.current.appendChild(renderer.domElement);
+
+                // Particles
+                const particlesGeometry = new THREE.BufferGeometry();
+                const particlesCount = 800;
+                const posArray = new Float32Array(particlesCount * 3);
+
+                for(let i = 0; i < particlesCount * 3; i++) {
+                    posArray[i] = (Math.random() - 0.5) * 25; 
+                }
+
+                particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+                const material = new THREE.PointsMaterial({
+                    size: 0.04,
+                    color: 0xa855f7,
+                    transparent: true,
+                    opacity: 0.8,
+                });
+
+                const particlesMesh = new THREE.Points(particlesGeometry, material);
+                scene.add(particlesMesh);
+
+                // Connecting Lines
+                const lineMaterial = new THREE.LineBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.15 });
+                const lineGeometry = new THREE.BufferGeometry();
+                const points = [];
+                for (let i = 0; i < 60; i++) {
+                    points.push(new THREE.Vector3((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15));
+                }
+                lineGeometry.setFromPoints(points);
+                const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+                scene.add(lines);
+
+                camera.position.z = 4;
+
+                // Mouse interaction
+                let mouseX = 0;
+                let mouseY = 0;
+                
+                const animateParticles = (event) => {
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+                }
+
+                document.addEventListener('mousemove', animateParticles);
+                const clock = new THREE.Clock();
+
+                const animate = () => {
+                    const elapsedTime = clock.getElapsedTime();
+                    particlesMesh.rotation.y = elapsedTime * 0.05;
+                    particlesMesh.rotation.x = mouseY * 0.00005;
+                    particlesMesh.rotation.y += mouseX * 0.00005;
+                    lines.rotation.x = elapsedTime * 0.02;
+                    renderer.render(scene, camera);
+                    requestAnimationFrame(animate);
+                };
+
+                animate();
+
+                const handleResize = () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                };
+
+                window.addEventListener('resize', handleResize);
+
+                return () => {
+                    window.removeEventListener('resize', handleResize);
+                    document.removeEventListener('mousemove', animateParticles);
+                    if (mountRef.current) mountRef.current.removeChild(renderer.domElement);
+                };
+            }, []);
+
+            return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none" />;
+        };
+
+        // --- Components ---
+
+        const ScrollProgress = () => {
+            const { scrollYProgress } = useScroll();
+            const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+            return (
+                <motion.div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-neonPurple to-neonCyan z-[60] origin-left" style={{ scaleX }} />
+            );
+        };
+
+        const Nav = () => (
+            <motion.nav 
+                initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.8 }}
+                className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 md:px-12 backdrop-blur-md border-b border-white/10 bg-dark/50"
+            >
+                <div className="text-2xl font-bold font-mono text-white cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                    Rakesh<span className="text-neonCyan">.Mali</span>
+                </div>
+                <div className="hidden md:flex space-x-8 text-sm font-medium text-gray-300">
+                    {['About', 'Process', 'Services', 'Projects', 'Contact'].map((item) => (
+                        <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-neonPurple transition-colors duration-300 uppercase tracking-widest text-xs">
+                            {item}
+                        </a>
+                    ))}
+                </div>
+                <a href="#contact" className="px-5 py-2 rounded-full border border-neonPurple text-neonPurple hover:bg-neonPurple hover:text-white transition-all duration-300 text-sm font-bold shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                    Let's Talk
+                </a>
+            </motion.nav>
+        );
+
+        const Typewriter = ({ text }) => {
+            const [displayText, setDisplayText] = useState('');
+            useEffect(() => {
+                let current = '';
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < text.length) {
+                        current += text[index];
+                        setDisplayText(current);
+                        index++;
+                    } else clearInterval(interval);
+                }, 50);
+                return () => clearInterval(interval);
+            }, [text]);
+            return <span>{displayText}<span className="cursor-blink">|</span></span>;
+        };
+
+        const Hero = () => (
+            <section className="min-h-screen flex flex-col justify-center items-center relative px-4 text-center pt-20">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-neonPurple/20 rounded-full blur-[120px] -z-10"></div>
+                
+                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+                    <span className="px-3 py-1 rounded-full border border-neonCyan/30 text-neonCyan bg-neonCyan/10 text-xs font-mono tracking-widest uppercase mb-4 inline-block shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                        <Typewriter text="AI-Driven Full Stack Developer" />
+                    </span>
+                </motion.div>
+
+                <motion.h1 
+                    initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1, delay: 0.2 }}
+                    className="text-6xl md:text-8xl font-extrabold text-white tracking-tight mb-6"
+                >
+                    Engineering <span className="text-transparent bg-clip-text bg-gradient-to-r from-neonCyan to-neonPurple text-glow">Performance</span><br />
+                    & Scale
+                </motion.h1>
+
+                <motion.p 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.4 }}
+                    className="text-gray-400 max-w-2xl text-lg md:text-xl leading-relaxed mb-10"
+                >
+                    I design scalable web architectures and AI-integrated solutions. 
+                    <br/><span className="text-white">Web Lead at GDSC MUJ</span>. Mentoring 50+ students.
+                    <br/>Currently solving complex systems in live environments.
+                </motion.p>
+
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.6 }}
+                    className="flex flex-wrap justify-center gap-4"
+                >
+                    <a href="#projects" className="px-8 py-3 rounded-lg bg-white text-dark font-bold hover:bg-gray-200 transition-colors transform hover:-translate-y-1">
+                        View Selected Works
+                    </a>
+                    <a href="#services" className="px-8 py-3 rounded-lg glass-panel text-white font-bold hover:bg-white/10 transition-colors flex items-center gap-2 transform hover:-translate-y-1">
+                        View Services
+                    </a>
+                </motion.div>
+            </section>
+        );
+
+     const About = () => {
+            const [robotY, setRobotY] = React.useState(0);
+            const sectionRef = React.useRef(null);
+
+            React.useEffect(() => {
+                const handleScroll = () => {
+                    if (sectionRef.current) {
+                        const rect = sectionRef.current.getBoundingClientRect();
+                        const sectionTop = rect.top;
+                        const sectionHeight = rect.height;
+                        const windowHeight = window.innerHeight;
+                        
+                        // Calculate robot position based on scroll
+                        if (sectionTop < windowHeight && sectionTop + sectionHeight > 0) {
+                            const scrollProgress = (windowHeight - sectionTop) / (windowHeight + sectionHeight);
+                            const movement = scrollProgress * 400 - 200;
+                            setRobotY(movement);
+                        }
+                    }
+                };
+
+                window.addEventListener('scroll', handleScroll);
+                handleScroll();
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <section id="about" ref={sectionRef} className="py-24 px-4 relative z-10">
+                    <div className="max-w-4xl mx-auto glass-panel p-8 md:p-12 rounded-2xl border border-white/10 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-neonPurple/10 rounded-full blur-[80px]"></div>
+                        
+                        {/* Floating Robot */}
+                        <motion.div 
+                            className="absolute -right-4 md:-right-8 pointer-events-none"
+                            style={{ 
+                                top: '50%',
+                                transform: `translateY(calc(-50% + ${robotY}px))`
+                            }}
+                            transition={{ type: "spring", stiffness: 50, damping: 20 }}
+                        >
+                            <div className="relative">
+                                {/* Speech Bubble */}
+                                <div className="absolute -left-24 top-0 bg-neonCyan/20 backdrop-blur-sm px-3 py-2 rounded-lg border border-neonCyan/40 whitespace-nowrap">
+                                    <p className="text-neonCyan text-sm font-bold">Hello! 👋</p>
+                                    <div className="absolute right-0 top-1/2 -mr-2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-neonCyan/40 transform -translate-y-1/2"></div>
+                                </div>
+                                
+                                {/* Robot Body */}
+                                <div className="w-16 h-20 relative">
+                                    {/* Head */}
+                                    <div className="w-12 h-12 bg-gradient-to-br from-neonPurple to-neonCyan rounded-lg mx-auto relative border-2 border-white/30">
+                                        {/* Eyes */}
+                                        <div className="absolute top-3 left-2 w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                        <div className="absolute top-3 right-2 w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                        {/* Antenna */}
+                                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-2 bg-neonCyan"></div>
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-2 h-2 bg-neonCyan rounded-full"></div>
+                                        {/* Smile */}
+                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-2 border-b-2 border-white rounded-full"></div>
+                                    </div>
+                                    
+                                    {/* Body */}
+                                    <div className="w-10 h-6 bg-gradient-to-br from-neonPurple/80 to-neonCyan/80 rounded-md mx-auto mt-1 border-2 border-white/20"></div>
+                                    
+                                    {/* Arms */}
+                                    <div className="absolute top-12 -left-2 w-4 h-1 bg-neonCyan rounded-full"></div>
+                                    <div className="absolute top-12 -right-2 w-4 h-1 bg-neonCyan rounded-full"></div>
+                                </div>
+                            </div>
+                        </motion.div>
+                        
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }} 
+                            whileInView={{ opacity: 1, y: 0 }} 
+                            viewport={{ once: true }}
+                            className="relative z-10"
+                        >
+                            <h2 className="text-3xl font-bold text-white mb-6">About <span className="text-neonCyan">Me</span></h2>
+                            <p className="text-gray-300 text-lg leading-relaxed mb-6">
+                                Hi! I'm <strong className="text-white">Rakesh Mali</strong>, an AI-driven Full-Stack Developer passionate about building secure, scalable, and conversion-focused web applications. I specialize in modern technologies including <span className="text-neonCyan">React.js, PHP, MySQL, and REST APIs</span>.
+                            </p>
+                            <p className="text-gray-300 text-lg leading-relaxed mb-6">
+                                With experience leading the <strong className="text-white">Google Developer Student Club (GDSC) MUJ Web Team</strong>, I've successfully completed multiple real-world projects, mentored developers, and managed end-to-end product lifecycles.
+                            </p>
+                            <div className="p-4 bg-white/5 rounded-lg border-l-4 border-neonPurple">
+                                <p className="text-white italic">
+                                    "I believe a website is more than just design — It's a digital asset that must deliver performance, trust, and results."
+                                </p>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+            );
+        };
+
+        // --- NEW WORKING PROCESS COMPONENT ---
+        const ProcessStep = ({ number, title, desc, delay }) => (
+            <motion.div 
+                initial={{ opacity: 0, x: number % 2 === 0 ? 50 : -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay }}
+                className="relative pl-8 md:pl-0 flex flex-col md:flex-row items-center gap-8 mb-12"
+            >
+                {/* Desktop: Alternating Layout */}
+                <div className={`hidden md:block w-1/2 ${number % 2 === 0 ? 'order-2 text-left pl-8' : 'order-1 text-right pr-8'}`}>
+                     <h3 className="text-xl font-bold text-white">{title}</h3>
+                     <p className="text-gray-400 text-sm mt-2 whitespace-pre-line">{desc}</p>
+                </div>
+
+                {/* Center Circle */}
+                <div className="absolute left-0 md:left-1/2 transform md:-translate-x-1/2 w-8 h-8 rounded-full bg-dark border-2 border-neonCyan flex items-center justify-center z-10 shadow-[0_0_15px_#06b6d4]">
+                    <span className="text-xs font-bold text-neonCyan">{number}</span>
+                </div>
+
+                {/* Desktop: Empty Side */}
+                <div className={`hidden md:block w-1/2 ${number % 2 === 0 ? 'order-1' : 'order-2'}`}></div>
+
+                {/* Mobile: Standard Layout */}
+                <div className="md:hidden w-full pl-4">
+                    <h3 className="text-xl font-bold text-white">{title}</h3>
+                    <p className="text-gray-400 text-sm mt-2 whitespace-pre-line">{desc}</p>
+                </div>
+            </motion.div>
+        );
+
+        const Process = () => {
+            const steps = [
+                { title: "Inquiry & Discovery", desc: "Consultation via WhatsApp/Email.\nUnderstand business, budget & timeline.\nDeliverable: Initial Rough Quotation." },
+                { title: "Proposal & Agreement", desc: "Scope document & Feature list.\nContract signing + Advance Payment (20-40%).\nDeliverable: Final Agreement." },
+                { title: "Content Collection", desc: "Gathering Logo, Images, Text & Business details.\nDeliverable: Brand Assets Received." },
+                { title: "Design Phase", desc: "UI design drafts & Feedback loops.\nDeliverable: Approved UI/UX Design." },
+                { title: "Development Phase", desc: "Coding, Responsive Testing, Backend Setup.\nDeliverable: Working Preview Link." },
+                { title: "Review + Changes", desc: "User testing & Minor revisions.\nSpeed + Security Optimization." },
+                { title: "Final Deployment", desc: "Remaining Payment (60-80%).\nDomain + Hosting + SSL Setup.\nDeliverable: Live Website 🎉" },
+                { title: "Handover & Support", desc: "Admin Training & Documentation.\nOwnership Transfer." }
+            ];
+
+            return (
+                <section id="process" className="py-24 px-4 relative z-10">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl font-bold text-white mb-4">Working <span className="text-neonPurple">Process</span></h2>
+                            <p className="text-gray-400">Start to End — Professional Workflow</p>
+                        </div>
+                        <div className="relative">
+                            {/* Center Line */}
+                            <div className="absolute left-[15px] md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-neonCyan via-neonPurple to-transparent opacity-30"></div>
+                            {steps.map((step, i) => (
+                                <ProcessStep key={i} number={i+1} {...step} delay={i * 0.1} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+       // --- UPDATED SERVICES SECTION ---
+const ServiceCard = ({ icon, title, desc, color }) => (
+    <motion.div 
+        whileHover={{ y: -10, scale: 1.02 }}
+        className="glass-panel p-8 rounded-2xl border border-white/5 flex flex-col gap-4 hover:border-white/20 transition-all duration-300 relative overflow-hidden group h-full"
+    >
+        <div className={`p-4 w-fit rounded-lg`} style={{ backgroundColor: `${color}20`, color: color }}>
+            <i className={icon} style={{ color: color }}></i>
+        </div>
+        <h3 className="text-xl font-bold text-white">{title}</h3>
+        <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line">{desc}</p>
+        <div className="absolute bottom-0 left-0 w-full h-1" style={{ backgroundColor: color }}></div>
+    </motion.div>
+);
+
+const Services = () => {
+    const services = [
+        {
+            title: "🖥️ Full-Stack Web Development",
+            icon: "fa-solid fa-laptop-code",
+            color: "#06b6d4",
+            desc: "End-to-end website & web app development using React.js, PHP & MySQL.\nIncludes:\n✔ Custom Website\n✔ Admin Dashboards\n✔ Secure Authentication\n✔ Database Integration"
+        },
+        {
+            title: "🎯 Business Website & Portfolio Development",
+            icon: "fa-solid fa-globe",
+            color: "#a855f7",
+            desc: "Professional & visually appealing websites designed to boost your brand.\nIdeal For: Businesses | Startups | Freelancers | Event & Service Providers"
+        },
+        {
+            title: "🔐 Secure Role-Based System Development",
+            icon: "fa-solid fa-shield-halved",
+            color: "#ec4899",
+            desc: "Multi-user login roles with automated workflows & data protection.\nExamples: Banking, Hostel, Inventory, HRM systems"
+        },
+        {
+            title: "🧠 AI-Enhanced Web Solutions",
+            icon: "fa-solid fa-brain",
+            color: "#06b6d4",
+            desc: "Integrate smart features using AI/ML APIs.\nExamples:\n→ Smart Search\n→ Chatbots\n→ Recommendation Systems"
+        },
+        {
+            title: "🛠️ Backend Development & API Integration",
+            icon: "fa-solid fa-server",
+            color: "#a855f7",
+            desc: "Robust backend logic with PHP, MySQL, MongoDB, REST APIs & JWT Auth.\nClean, scalable architecture"
+        },
+        {
+            title: "📱 Responsive UI/UX Development",
+            icon: "fa-solid fa-mobile-screen-button",
+            color: "#ec4899",
+            desc: "Modern UI design that works perfectly on all devices.\nTools: HTML5, CSS3, JavaScript, Bootstrap, React.js"
+        },
+        {
+            title: "🌐 Website Upgrade & Maintenance",
+            icon: "fa-solid fa-arrow-rotate-right",
+            color: "#06b6d4",
+            desc: "Fix performance/UI issues or add new features.\nIncludes:\n✔ Speed Optimization\n✔ Bug Fixing\n✔ Security Improvements\n✔ UI Redesign"
+        },
+        {
+            title: "🎁 Extras (Add-Ons)",
+            icon: "fa-solid fa-gift",
+            color: "#a855f7",
+            desc: "⭐ Hosting & Deployment (Vercel / cPanel)\n⭐ SEO Optimization\n⭐ Domain & Email Setup\n⭐ Admin Panel Training"
+        },
+        {
+            title: "🛒 E-Commerce & Payment Gateway Integration",
+            icon: "fa-solid fa-cart-shopping",
+            color: "#ec4899",
+            desc: "Sell products/services online with secure checkout.\nSupports: Razorpay, Stripe, PayPal"
+        },
+        {
+            title: "🚀 SEO, Performance & Speed Optimization",
+            icon: "fa-solid fa-rocket",
+            color: "#06b6d4",
+            desc: "Boost search ranking & conversions.\nServices: Page Speed, Responsive Fixes, SEO Best Practices"
+        },
+        {
+            title: "🛠️ Bug Fixing & Maintenance Support",
+            icon: "fa-solid fa-wrench",
+            color: "#a855f7",
+            desc: "Regular monitoring & updates to keep your website running smoothly.\nPlans: Monthly / Quarterly / Yearly"
+        },
+        {
+            title: "🔐 Secure Authentication & User Management",
+            icon: "fa-solid fa-user-lock",
+            color: "#ec4899",
+            desc: "Role-based login systems with advanced security.\nTech: JWT | Bcrypt | Session Secure Auth"
+        }
+    ];
+
+    return (
+        <section id="services" className="py-24 px-4 bg-gradient-to-b from-dark to-dark/50">
+            <div className="max-w-7xl mx-auto">
+                <div className="text-center mb-16">
+                    <h2 className="text-4xl font-bold text-white mb-4">My <span className="text-neonCyan">Services</span></h2>
+                    <p className="text-gray-400">Complete Web Solutions Partner</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {services.map((s, i) => <ServiceCard key={i} {...s} />)}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+
+
+// --- EXPERIENCE TIMELINE SECTION ---
+const ExperienceCard = ({ org, role, duration, achievements, tech, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 50 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6, delay }}
+    className="relative pl-8 md:pl-12 mb-12"
+  >
+    {/* Timeline Dot */}
+    <div className="absolute left-0 top-2 w-4 h-4 bg-neonCyan rounded-full border-2 border-white/20 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
+
+    <div className="bg-dark/60 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-lg hover:shadow-neonCyan/20 transition-all">
+      <h3 className="text-xl font-bold text-white">{role}</h3>
+      <p className="text-neonPurple font-mono text-sm mb-2">{org} | {duration}</p>
+      <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 mb-2">
+        {achievements.map((a, i) => <li key={i}>{a}</li>)}
+      </ul>
+      <div className="flex flex-wrap gap-2 mt-2">
+        {tech.map((t, i) => (
+          <span key={i} className="text-xs px-2 py-1 rounded bg-white/10 text-neonCyan border border-white/10">{t}</span>
+        ))}
+      </div>
+    </div>
+  </motion.div>
+);
+
+const ExperienceTimeline = () => {
+  const experiences = [
+    {
+      org: "GDSC MUJ",
+      role: "Web Dev Lead",
+      duration: "2024 - 2025",
+      achievements: [
+        "Led and deployed 10+ student tech projects",
+        "Conducted web development workshops for 50+ learners",
+        "Improved team delivery efficiency by 30%"
+      ],
+      tech: ["React.js", "PHP", "MySQL"]
+    },
+    {
+      org: "Elinic UI Design",
+      role: "Project Manager",
+      duration: "2023 - 2024",
+      achievements: [
+        "Managed 2 UI design projects end-to-end",
+        "Optimized delivery timeline by 20%",
+        "Mentored junior designers"
+      ],
+      tech: ["Figma", "React.js"]
+    },
+    // Add more experiences here
+  ];
+
+  return (
+    <section id="experience" className="py-24 px-4 relative z-10 bg-dark/20">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Experience & <span className="text-neonCyan">Leadership</span>
+          </h2>
+          <p className="text-gray-400">Professional Achievements + Impact Metrics</p>
+        </div>
+
+        <div className="relative">
+          {/* Vertical Line */}
+          <div className="absolute left-4 md:left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-neonCyan via-neonPurple to-transparent opacity-30"></div>
+          {experiences.map((exp, i) => <ExperienceCard key={i} {...exp} delay={i * 0.2} />)}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+
+        // --- UPDATED PROJECT CARD (3D TILT + METRICS) ---
+        const ProjectCard = ({ title, desc, tags, link, github, metrics }) => {
+            const x = useMotionValue(0);
+            const y = useMotionValue(0);
+            const rotateX = useTransform(y, [-100, 100], [15, -15]);
+            const rotateY = useTransform(x, [-100, 100], [-15, 15]);
+
+            return (
+                <div style={{ perspective: 1000 }}>
+                    <motion.div
+                        style={{ x, y, rotateX, rotateY, z: 100 }}
+                        drag dragElastic={0.16} dragConstraints={{ top: 0, left: 0, right: 0, bottom: 0 }}
+                        whileHover={{ cursor: "grabbing" }}
+                        className="glass-panel rounded-2xl p-6 relative group h-full flex flex-col justify-between hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]"
+                    >
+                        <div>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                {tags.map((tag, i) => (
+                                    <span key={i} className="text-[10px] font-mono uppercase px-2 py-1 rounded bg-white/5 text-neonCyan border border-white/10">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
+                            <p className="text-gray-400 text-sm mb-4 leading-relaxed">{desc}</p>
+                            
+                            {/* Metrics Section */}
+                            {metrics && (
+                                <div className="mb-6 p-3 bg-neonPurple/5 border-l-2 border-neonPurple rounded-r">
+                                    <p className="text-xs text-gray-300 font-mono"><i className="fa-solid fa-chart-line mr-2 text-neonPurple"></i>{metrics}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-4 mt-auto pt-4 border-t border-white/10">
+                            <a href={link} className="flex-1 text-center py-2 rounded bg-neonCyan/10 text-neonCyan text-xs font-bold hover:bg-neonCyan/20 transition-all">
+                                <i className="fa-solid fa-eye mr-2"></i> Live Demo
+                            </a>
+                            <a href={github} className="flex-1 text-center py-2 rounded bg-white/5 text-white text-xs font-bold hover:bg-white/10 transition-all">
+                                <i className="fa-brands fa-github mr-2"></i> Code
+                            </a>
+                        </div>
+                    </motion.div>
+                </div>
+            );
+        };
+
+        const Projects = () => {
+            const projects = [
+                {
+                    title: "Prime Bank System",
+                    desc: "Secure, role-based banking system. Features fund transfer, transaction history, and user management consoles.",
+                    metrics: "Reduced processing errors by 20% & improved transparency.",
+                    tags: ["PHP", "MySQL", "Security", "FinTech"],
+                    link: "#", github: "#"
+                },
+                {
+                    title: "Joshi Electronic Shop",
+                    desc: "Responsive e-commerce platform with a centralized management panel and secure browsing.",
+                    metrics: "Improved workflow efficiency by 35%.",
+                    tags: ["E-Commerce", "Admin Panel", "Web Design"],
+                    link: "#", github: "#"
+                },
+                {
+                    title: "MUJ Project Allocation",
+                    desc: "Academic system enabling students to securely select projects. Integrated faculty dashboards.",
+                    metrics: "Used by 200+ students for seamless allocation.",
+                    tags: ["React", "Node.js", "System Design"],
+                    link: "#", github: "#"
+                },
+                {
+                    title: "GDSC Web Platform",
+                    desc: "Event & member management platform for Google Developer Student Club.",
+                    metrics: "Handles registration for 100+ active members.",
+                    tags: ["React", "Firebase", "Community"],
+                    link: "#", github: "#"
+                }
+            ];
+
+            return (
+                <section id="projects" className="py-24 px-4 relative z-10">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="mb-16">
+                            <h2 className="text-4xl font-bold text-white mb-4">Selected <span className="text-neonPurple">Works</span></h2>
+                            <p className="text-gray-400">Drag cards to interact. Real-world results.</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                            {projects.map((p, i) => <ProjectCard key={i} {...p} />)}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // --- NEW PRICING & POLICY SECTION ---
+        const Policy = () => (
+            <section className="py-24 px-4 bg-dark/30">
+                <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    {/* Payment Policy */}
+                    <motion.div initial={{opacity:0, x:-20}} whileInView={{opacity:1, x:0}} className="glass-panel p-8 rounded-2xl">
+                        <h3 className="text-2xl font-bold text-white mb-6"><i className="fa-solid fa-lock text-neonCyan mr-3"></i>Payment Policy</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-white/10 text-gray-400 text-sm uppercase">
+                                        <th className="py-3">Stage</th>
+                                        <th className="py-3 text-right">Payment</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-gray-300">
+                                    <tr className="border-b border-white/5">
+                                        <td className="py-4">Agreement Sign</td>
+                                        <td className="py-4 text-right text-neonPurple font-bold">20-40% Advance</td>
+                                    </tr>
+                                    <tr className="border-b border-white/5">
+                                        <td className="py-4">Development Preview</td>
+                                        <td className="py-4 text-right">20-30%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-4">Final Launch</td>
+                                        <td className="py-4 text-right text-neonCyan font-bold">Remaining Balance</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </motion.div>
+
+                    {/* Support */}
+                    <motion.div initial={{opacity:0, x:20}} whileInView={{opacity:1, x:0}} className="glass-panel p-8 rounded-2xl flex flex-col justify-center">
+                        <h3 className="text-2xl font-bold text-white mb-6"><i className="fa-solid fa-handshake text-neonPurple mr-3"></i>Post-Launch Support</h3>
+                        <ul className="space-y-4">
+                            <li className="flex items-start gap-3 text-gray-300">
+                                <i className="fa-solid fa-check-circle text-neonCyan mt-1"></i>
+                                <span><strong>Bug Fixes:</strong> Free for 15-45 days post-launch.</span>
+                            </li>
+                            <li className="flex items-start gap-3 text-gray-300">
+                                <i className="fa-solid fa-check-circle text-neonCyan mt-1"></i>
+                                <span><strong>Training:</strong> Admin panel video/call training included.</span>
+                            </li>
+                            <li className="flex items-start gap-3 text-gray-300">
+                                <i className="fa-solid fa-check-circle text-neonCyan mt-1"></i>
+                                <span><strong>Backup:</strong> Full source code & database backup shared.</span>
+                            </li>
+                            <li className="flex items-start gap-3 text-gray-300">
+                                <i className="fa-solid fa-check-circle text-neonCyan mt-1"></i>
+                                <span><strong>Maintenance:</strong> Optional monthly/yearly plans available.</span>
+                            </li>
+                        </ul>
+                    </motion.div>
+                </div>
+            </section>
+        );
+
+        
+
+        // --- CONTACT SECTION ---
+        const Contact = () => (
+            <section id="contact" className="py-24 px-4 relative z-10 overflow-hidden">
+                <div className="max-w-3xl mx-auto glass-panel-heavy rounded-2xl p-8 md:p-12 text-center">
+                    <h2 className="text-4xl font-bold text-white mb-6">Ready to Innovate?</h2>
+                    <p className="text-gray-300 mb-8 text-lg">
+                        I am currently open to opportunities in <span className="text-neonCyan">Web Development</span> and <span className="text-neonPurple">Full-Stack Roles</span>.
+                    </p>
+                    
+                    <div className="flex flex-col md:flex-row justify-center gap-6 mb-10">
+                        <a href="tel:+917600404831" className="flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white border border-white/10">
+                            <i className="fa-solid fa-phone text-neonPurple"></i>
+                            <span>+91 7600404831</span>
+                        </a>
+                        <a href="mailto:rakesh@example.com" className="flex items-center justify-center gap-3 px-6 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white border border-white/10">
+                            <i className="fa-solid fa-envelope text-neonCyan"></i>
+                            <span>[Your Email]</span>
+                        </a>
+                    </div>
+
+                    <form className="space-y-4 text-left max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
+                        <div className="grid grid-cols-2 gap-4">
+                             <input type="text" placeholder="Name" className="w-full bg-dark/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neonPurple transition-colors" />
+                             <input type="email" placeholder="Email" className="w-full bg-dark/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neonPurple transition-colors" />
+                        </div>
+                        <textarea rows="4" placeholder="Project Details" className="w-full bg-dark/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neonPurple transition-colors"></textarea>
+                        <button className="w-full bg-gradient-to-r from-neonPurple to-neonCyan text-white font-bold py-3 rounded-lg hover:opacity-90 transition-all transform hover:scale-[1.02] shadow-lg shadow-neonPurple/25">
+                            Send Transmission
+                        </button>
+                    </form>
+                </div>
+                
+                <footer className="text-center text-gray-500 text-sm mt-12">
+                    <div className="flex justify-center gap-6 mb-4 text-2xl">
+                        <a href="#" className="hover:text-white transition-colors"><i className="fa-brands fa-github"></i></a>
+                        <a href="#" className="hover:text-blue-500 transition-colors"><i className="fa-brands fa-linkedin"></i></a>
+                    </div>
+                    © 2025 Rakesh Mali. Built with React & Three.js.
+                </footer>
+            </section>
+        );
+
+        const App = () => {
+            return (
+                <div className="font-sans antialiased text-white selection:bg-neonPurple selection:text-white pb-10">
+
+  <ScrollProgress />
+  <ThreeBackground />
+  <Nav />
+  <Hero />
+  <About />
+  <Process />
+  
+  <Services />
+  <ExperienceTimeline />   {/* <-- New Section Added */}
+  <Projects />
+  <Policy />
+  <Contact />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

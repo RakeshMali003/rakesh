@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakesh Mali </title>
+    
+    <!-- React & DOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.12.16/dist/framer-motion.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Fonts: Syne for Agency feel, Inter for readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Syne', 'sans-serif'],
+                    },
+                    colors: {
+                        carbon: '#1a1a1a',
+                        offWhite: '#f4f3f0', // Warm paper-like white
+                        accent: '#ff4d00',   // International Orange (Agency standard)
+                        subtle: '#888888',
+                    },
+                    cursor: {
+                        none: 'none',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            margin: 0; 
+            background-color: #f4f3f0; 
+            color: #1a1a1a; 
+            cursor: none; /* Hide default cursor for custom one */
+            overflow-x: hidden;
+        }
+        
+        /* Smooth Scrolling Container */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        ::selection {
+            background: #1a1a1a;
+            color: #f4f3f0;
+        }
+
+        /* Utility for hiding scrollbar but keeping functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, useScroll, useTransform, useSpring, useMotionValue } = window.Motion;
+
+        // --- Custom Cursor Component ---
+        const CustomCursor = () => {
+            const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+            const [isHovering, setIsHovering] = useState(false);
+
+            useEffect(() => {
+                const updateMousePosition = (e) => {
+                    setMousePosition({ x: e.clientX, y: e.clientY });
+                };
+
+                const handleMouseOver = (e) => {
+                    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('.hover-trigger')) {
+                        setIsHovering(true);
+                    } else {
+                        setIsHovering(false);
+                    }
+                };
+
+                window.addEventListener('mousemove', updateMousePosition);
+                window.addEventListener('mouseover', handleMouseOver);
+
+                return () => {
+                    window.removeEventListener('mousemove', updateMousePosition);
+                    window.removeEventListener('mouseover', handleMouseOver);
+                };
+            }, []);
+
+            return (
+                <>
+                    {/* Main Dot */}
+                    <motion.div
+                        className="fixed top-0 left-0 w-3 h-3 bg-carbon rounded-full pointer-events-none z-[100] mix-blend-difference"
+                        animate={{ x: mousePosition.x - 6, y: mousePosition.y - 6 }}
+                        transition={{ type: "tween", ease: "backOut", duration: 0 }}
+                    />
+                    {/* Trailing Ring */}
+                    <motion.div
+                        className="fixed top-0 left-0 w-12 h-12 border border-carbon rounded-full pointer-events-none z-[100] mix-blend-difference"
+                        animate={{ 
+                            x: mousePosition.x - 24, 
+                            y: mousePosition.y - 24,
+                            scale: isHovering ? 1.5 : 1,
+                            opacity: isHovering ? 0.5 : 1
+                        }}
+                        transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+                    />
+                </>
+            );
+        };
+
+        // --- Navigation ---
+        const Nav = () => (
+            <motion.nav 
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: [0.6, 0.05, -0.01, 0.9] }}
+                className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-8 py-6 mix-blend-difference text-white"
+            >
+                <div className="text-xl font-bold font-display tracking-tight hover-trigger">
+                    RAKESH MALI<span className="text-accent">.</span>
+                </div>
+                <div className="hidden md:flex space-x-12 text-sm font-medium tracking-widest uppercase">
+                    {['Work', 'About', 'Projects', 'Exprience', 'Contact'].map((item) => (
+                        <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-gray-400 transition-colors hover-trigger relative group">
+                            {item}
+                            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full"></span>
+                        </a>
+                    ))}
+                </div>
+                <a href="#contact" className="hover-trigger text-sm font-bold uppercase tracking-widest border-b border-transparent hover:border-white transition-all">
+                    Menu
+                </a>
+            </motion.nav>
+        );
+
+        // --- Hero Section ---
+        const Hero = () => {
+            return (
+                <section className="min-h-screen flex flex-col justify-end px-8 pb-20 pt-32 relative overflow-hidden">
+                    {/* Background Graphic */}
+                    <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-gray-200 rounded-full blur-[100px] opacity-50 -z-10 animate-pulse"></div>
+
+                    <div className="max-w-[90vw]">
+                        <motion.div
+                            initial={{ opacity: 0, y: 100 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 1, ease: [0.6, 0.05, -0.01, 0.9] }}
+                        >
+                            <h2 className="text-lg md:text-xl text-subtle font-medium mb-4 tracking-wide">
+                                FULL STACK DEVELOPER & UI ENGINEER
+                            </h2>
+                        </motion.div>
+                        
+                        <div className="overflow-hidden">
+                            <motion.h1 
+                                initial={{ y: "100%" }}
+                                animate={{ y: 0 }}
+                                transition={{ duration: 1, delay: 0.2, ease: [0.6, 0.05, -0.01, 0.9] }}
+                                className="text-[12vw] leading-[0.85] font-display font-bold text-carbon tracking-tighter"
+                            >
+                                DIGITAL 
+                            </motion.h1>
+                        </div>
+                        <div className="overflow-hidden">
+                            <motion.h1 
+                                initial={{ y: "100%" }}
+                                animate={{ y: 0 }}
+                                transition={{ duration: 1, delay: 0.35, ease: [0.6, 0.05, -0.01, 0.9] }}
+                                className="text-[12vw] leading-[0.85] font-display font-bold text-carbon tracking-tighter ml-[10vw]"
+                            >
+                                ARCHITECT
+                            </motion.h1>
+                        </div>
+                    </div>
+
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1, duration: 1 }}
+                        className="absolute bottom-8 right-8 text-right hidden md:block"
+                    >
+                        <p className="text-sm font-mono text-subtle">SCROLL TO EXPLORE</p>
+                        <motion.div 
+                            animate={{ y: [0, 10, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="mt-2 text-2xl text-carbon"
+                        >
+                            ↓
+                        </motion.div>
+                    </motion.div>
+                </section>
+            );
+        };
+
+        // --- Marquee Ticker ---
+        const Ticker = () => {
+            return (
+                <div className="py-12 bg-carbon text-offWhite overflow-hidden whitespace-nowrap border-y border-gray-800">
+                    <motion.div 
+                        className="flex gap-16 items-center text-4xl md:text-6xl font-display font-bold uppercase tracking-tight"
+                        animate={{ x: ["0%", "-50%"] }}
+                        transition={{ duration: 20, ease: "linear", repeat: Infinity }}
+                    >
+                       <span>React.js</span> <span class="text-2xl text-accent">●</span>
+<span>JavaScript</span> <span class="text-2xl text-accent">●</span>
+<span>PHP</span> <span class="text-2xl text-accent">●</span>
+<span>MySQL</span> <span class="text-2xl text-accent">●</span>
+<span>MongoDB</span> <span class="text-2xl text-accent">●</span>
+<span>REST APIs</span> <span class="text-2xl text-accent">●</span>
+<span>HTML5</span> <span class="text-2xl text-accent">●</span>
+<span>CSS3</span> <span class="text-2xl text-accent">●</span>
+<span>Bootstrap</span> <span class="text-2xl text-accent">●</span>
+<span>Responsive UI</span> <span class="text-2xl text-accent">●</span>
+<span>Git & GitHub</span> <span class="text-2xl text-accent">●</span>
+<span>Docker</span> <span class="text-2xl text-accent">●</span>
+<span>Postman</span> <span class="text-2xl text-accent">●</span>
+<span>System Architecture</span> <span class="text-2xl text-accent">●</span>
+<span>AI Integration</span> <span class="text-2xl text-accent">●</span>
+<span>Unit Testing</span> <span class="text-2xl text-accent">●</span>
+<span>Agile / Scrum</span> <span class="text-2xl text-accent">●</span>
+<span>Prompt Engineering</span>
+
+                    </motion.div>
+                </div>
+            );
+        };
+// --- Enhanced Sticky Work Section ---
+const ProjectCard = ({ title, category, year, desc, stack, github, demo, status, index, color }) => {
+    return (
+        <div className="sticky top-0 h-screen flex items-center justify-center p-4">
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6 }}
+                className="relative w-full max-w-5xl h-[75vh] rounded-3xl overflow-hidden shadow-2xl hover-trigger group"
+                style={{ backgroundColor: color }}
+            >
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-500"></div>
+
+                {/* Header */}
+                <div className="absolute top-0 left-0 p-8 md:p-12 w-full flex justify-between items-start z-10 mix-blend-overlay">
+                    <div>
+                        <h3 className="text-4xl md:text-6xl font-display font-bold text-white mb-2">{title}</h3>
+                        <p className="text-xl text-white/80 font-mono">{category}</p>
+                    </div>
+                    <span className="text-2xl font-bold text-white/80">0{index + 1}</span>
+                </div>
+
+                {/* Description + Stack */}
+                <div className="absolute bottom-32 left-0 p-8 md:p-12 text-white z-20">
+                    <p className="text-lg text-white/85 max-w-xl mb-4">{desc}</p>
+
+                    <div className="flex flex-wrap gap-2 mb-2">
+                        {stack.map((tech, i) => (
+                            <span key={i} className="px-3 py-1 bg-white/20 rounded-full text-sm font-mono">
+                                {tech}
+                            </span>
+                        ))}
+                    </div>
+                    <span className="text-sm text-white/70 font-mono uppercase">{status}</span>
+                </div>
+
+                {/* Timeline + Buttons */}
+                <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 flex justify-between items-end z-10">
+                    <span className="text-white/70 font-mono text-lg">{year}</span>
+
+                    <div className="flex gap-4">
+                        {github && (
+                            <a href={github} target="_blank" rel="noopener noreferrer"
+                                className="px-6 py-2 bg-white text-black rounded-full font-bold text-xs tracking-widest hover:bg-black hover:text-white transition">
+                                GitHub ↗
+                            </a>
+                        )}
+                        {demo && (
+                            <a href={demo} target="_blank" rel="noopener noreferrer"
+                                className="px-6 py-2 border border-white text-white rounded-full font-bold text-xs tracking-widest hover:bg-white hover:text-black transition">
+                                Live Demo ↗
+                            </a>
+                        )}
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+const Experience = () => {
+    const experiences = [
+        {
+            role: "Web Dev Lead",
+            company: "GDSC MUJ",
+            period: "2024 - 2025",
+            achievements: [
+                "Led and deployed 10+ student tech projects",
+                "Conducted web development workshops for 50+ learners",
+                "Improved team delivery efficiency by 30%",
+            ],
+            skills: ["React.js", "PHP", "MySQL"]
+        },
+        {
+            role: "Project Manager",
+            company: "Elinic UI Design",
+            period: "2023 - 2024",
+            achievements: [
+                "Managed 2 UI design projects end-to-end",
+                "Optimized delivery timeline by 20%",
+                "Mentored junior designers"
+            ],
+            skills: ["Figma", "React.js"]
+        }
+    ];
+
+    const payments = [
+        { stage: "Agreement Sign", amount: "20-40% Advance" },
+        { stage: "Development Preview", amount: "20-30%" },
+        { stage: "Final Launch", amount: "Remaining Balance" }
+    ];
+
+    const support = [
+        "Bug Fixes: Free for 15-45 days post-launch",
+        "Training: Admin panel video/call training included",
+        "Backup: Full source code & database backup shared",
+        "Maintenance: Optional monthly/yearly plans available"
+    ];
+
+    return (
+        <section id="experience" className="py-32 px-8 bg-white">
+            <div className="max-w-7xl mx-auto">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-subtle mb-4">Experience & Leadership</h3>
+                <h2 className="text-5xl md:text-6xl font-display font-bold mb-16">Professional Achievements + Impact Metrics</h2>
+
+                <div className="grid md:grid-cols-2 gap-16 mb-16">
+                    {experiences.map((exp, idx) => (
+                        <motion.div 
+                            key={idx} 
+                            className="bg-offWhite rounded-3xl p-8 shadow-lg"
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: idx * 0.2 }}
+                        >
+                            <h4 className="text-2xl font-bold mb-1">{exp.role}</h4>
+                            <p className="text-subtle italic mb-4">{exp.company} | {exp.period}</p>
+                            <ul className="list-disc list-inside mb-4 text-gray-600">
+                                {exp.achievements.map((a, i) => <li key={i}>{a}</li>)}
+                            </ul>
+                            <div className="flex flex-wrap gap-2">
+                                {exp.skills.map((skill, i) => (
+                                    <span key={i} className="px-3 py-1 bg-accent text-white text-xs rounded-full">{skill}</span>
+                                ))}
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* Payment Policy */}
+                <div className="mb-12">
+                    <h3 className="text-xl font-bold mb-4">Payment Policy</h3>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {payments.map((pay, i) => (
+                            <div key={i} className="p-4 bg-offWhite rounded-xl shadow flex flex-col items-center">
+                                <h4 className="font-bold text-lg mb-1">{pay.stage}</h4>
+                                <p className="text-gray-600">{pay.amount}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Post-Launch Support */}
+                <div>
+                    <h3 className="text-xl font-bold mb-4">Post-Launch Support</h3>
+                    <ul className="list-disc list-inside text-gray-600">
+                        {support.map((s, i) => <li key={i}>{s}</li>)}
+                    </ul>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+
+const Work = () => {
+    const projects = [
+      {
+    title: "Lucky Event",
+    category: "Wedding Event Management",
+    year: "01/2024 - 2/2024",
+    desc: "A beautifully designed Wedding Event Management website, helping users explore and book wedding services including venues, catering, decoration, and photography. Designed with modern UI/UX for a smooth and delightful planning experience.",
+    stack: ["HTML", "CSS", "JavaScript", "Responsive UI"],
+    github: "https://github.com/rakesh-mali/MUJ-Allocator",
+    demo: "http://lucky-event.kesug.com/",
+    status: "Live",
+    color: "#2d3436"
+},
+
+  {
+            title: "Prime Bank",
+            category: "FinTech Solution",
+            year: "09/2024 - 12/2024",
+            desc: "Engineered a secure, role-based banking system enabling 150+ users to manage accounts and transactions, reducing processing errors by 20%.",
+            stack: ["PHP", "MySQL", "AES Security", "Dashboard UI"],
+            github: "https://github.com/rakesh-mali/Prime-Bank",
+            demo: "http://prime-bank.infinityfree.me/",
+            status: "Live",
+            color: "#141414"
+        },
+
+        {
+            title: "Joshi Electronics",
+            category: "E-Commerce Platform",
+            year: "08/2025 - Present",
+            desc: "Engineered a responsive e-commerce platform with secure product browsing, purchasing, and centralized management panel, improving workflow efficiency by 35%.",
+            stack: ["React.js", "PHP", "MySQL", "REST API", "JWT Auth"],
+            github: "https://github.com/rakesh-mali/Joshi-Electronics",
+            demo: "https://joshi-electronics.live",
+            status: "Live",
+            color: "#1a1a1a"
+        },
+        {
+            title: "MUJ Project Allocation System",
+            category: "Academic Management",
+            year: "01/2024 - 10/2024",
+            desc: "Designed and deployed a project management system enabling 200+ students to securely select and track academic projects. Integrated faculty dashboards for monitoring and approvals.",
+            stack: ["PHP", "MySQL", "Bootstrap", "Admin Panel"],
+            github: "https://github.com/rakesh-mali/MUJ-Allocator",
+            demo: "",
+            status: "Completed",
+            color: "#2d3436"
+        },
+      
+        {
+            title: "Departmental Academic System (GPDAMAN)",
+            category: "College Portal",
+            year: "11/2022 - 02/2023",
+            desc: "Developed a college portal displaying faculty info, events, placements, and notices. Implemented student login for 200+ students.",
+            stack: ["PHP", "MySQL", "Bootstrap"],
+            github: "https://github.com/rakesh-mali/GPDAMAN",
+            demo: "",
+            status: "Completed",
+            color: "#2f2f2f"
+        },
+        {
+            title: "GDSC Platform",
+            category: "Event & Club Management",
+            year: "07/2025 - 08/2025",
+            desc: "Built a web platform for GDSC events, faculty details, and student updates, enabling registration and announcements for 100+ members.",
+            stack: ["React.js", "PHP", "MySQL"],
+            github: "https://github.com/rakesh-mali/GDSC-Platform",
+            demo: "",
+            status: "Completed",
+            color: "#141414"
+        },
+        {
+            title: "Attellia Website",
+            category: "Landing Page",
+            year: "2025",
+            desc: "Designed and developed a responsive landing page for Attellia, focusing on AI & Intelligent Automation solutions for enterprises.",
+            stack: ["React.js"],
+            github: "https://github.com/rakesh-mali/Attellia-Website",
+            demo: "https://attellia.live",
+            status: "Live",
+            color: "#1c1c1c"
+        },
+        {
+            title: "Elinic UI Design",
+            category: "UI Development",
+            year: "2025",
+            desc: "Leading the UI design and development process for Elinic. Ensuring a modern, intuitive, and responsive interface.",
+            stack: ["React.js"],
+            github: "https://github.com/rakesh-mali/Elinic-UI",
+            demo: "",
+            status: "In Progress",
+            color: "#222222"
+        }
+    ];
+
+    return (
+        <section id="work" className="relative">
+            <div className="px-8 py-20">
+                <h2 className="text-[10vw] font-display font-bold text-gray-200 leading-none sticky top-20 z-0">
+                    SELECTED<br/>WORKS
+                </h2>
+            </div>
+
+            <div className="relative z-10 -mt-[20vh]">
+                {projects.map((proj, i) => (
+                    <ProjectCard key={i} index={i} {...proj} />
+                ))}
+            </div>
+        </section>
+    );
+};
+const About = () => {
+    const { scrollY } = window.Motion.useScroll();
+
+    // Scroll-based animations for robot
+    const tilt = window.Motion.useTransform(scrollY, [0, 300], [0, 15]);
+    const moveY = window.Motion.useTransform(scrollY, [0, 300], [0, -20]);
+
+    return (
+        <section id="about" className="py-32 px-8 bg-offWhite relative overflow-hidden">
+            {/* Floating Robot */}
+            <motion.div 
+                className="absolute -bottom-8 right-8 w-32 h-32 z-10"
+                style={{ y: moveY, rotate: tilt }}
+            >
+                <img 
+                    src="https://cdn-icons-png.flaticon.com/512/4712/4712081.png" 
+                    alt="Scroll Robot" 
+                    className="w-full h-full object-contain"
+                />
+                {/* Speech Bubble */}
+                <motion.div
+                    className="absolute -top-12 -right-6 bg-neonCyan text-black px-3 py-1 rounded-lg font-bold text-xs shadow-lg"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    Hello! 👋
+                </motion.div>
+            </motion.div>
+
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 relative z-10">
+                <div>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-subtle mb-8">
+                        About Me
+                    </h3>
+
+                    <p className="text-3xl md:text-4xl font-display font-medium leading-tight mb-6">
+                        I build intelligent and modern web experiences that combine 
+                        <span className="text-gray-400"> clean UI</span> with 
+                        <span className="underline decoration-accent underline-offset-4"> secure engineering</span>.
+                    </p>
+
+                    <p className="text-lg text-gray-600 leading-relaxed max-w-md mb-6">
+                        I’m a Full Stack Developer and B.Tech IT student at Manipal University Jaipur. 
+                        Former Web Development Lead at GDSC MUJ, where I led teams, delivered real-world 
+                        applications, and mentored 50+ students in React.js, PHP & MySQL. I specialize in 
+                        building scalable web apps, role-based dashboards, banking systems, and data-driven platforms.
+                    </p>
+
+                    {/* 🚀 Mission Statement */}
+                    <motion.div
+                        className="p-6 bg-white/10 rounded-lg border-l-4 border-accent mb-8 max-w-md"
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <h4 className="text-xl font-bold mb-2">🚀 My Mission</h4>
+                        <p className="text-gray-600 leading-relaxed">
+                            To deliver websites that convert users into customers — 
+                            with modern design, smart technology, and business-focused execution. <br/><br/>
+                            I love working with clients who value quality, innovation, and long-term success. <br/><br/>
+                            If you are planning to build a digital presence that actually works — 
+                            Let’s build something incredible together! 💻✨
+                        </p>
+                    </motion.div>
+
+                  <div className="mt-12 flex gap-4">
+    <a 
+        href="#work"
+        className="hover-trigger px-6 py-4 border border-gray-300 rounded-lg hover:bg-carbon hover:text-white transition-all font-bold text-sm uppercase tracking-wider text-carbon"
+    >
+        View Selected Works
+    </a>
+    <a 
+        href="#services"
+        className="hover-trigger px-6 py-4 border border-gray-300 rounded-lg hover:bg-carbon hover:text-white transition-all font-bold text-sm uppercase tracking-wider text-carbon"
+    >
+        View Services
+    </a>
+</div>
+</div>
+
+                <div className="relative pt-12 md:pt-0">
+                    <motion.div
+                        className="w-full aspect-[4/5] bg-gray-200 grayscale contrast-125 overflow-hidden relative"
+                        whileHover={{ scale: 0.98 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <img
+                            src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80"
+                            alt="Rakesh Mali"
+                            className="w-full h-full object-cover"
+                        />
+
+                        {/* Overlay Card */}
+                        <motion.div
+                            className="absolute bottom-8 left-8 bg-white p-6 max-w-xs shadow-xl"
+                            initial={{ y: 20, opacity: 0 }}
+                            whileInView={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <h4 className="font-bold text-xl mb-1">Rakesh Mali</h4>
+                            <p className="text-sm text-gray-500 mb-4">
+                                Full Stack Developer | Ex-GDSC Web Lead
+                            </p>
+                            <div className="flex gap-2">
+                                <a href="https://github.com/RakeshMali003"><i className="fab fa-github text-xl"></i></a>
+                                <a href="https://www.linkedin.com/in/rakeshmali1303/"><i className="fab fa-linkedin text-xl"></i></a>
+                                <a href="https://x.com/rakesh_mali03"><i className="fab fa-twitter text-xl"></i></a>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+// --- Working Process Section (Unique Design) ---
+const ProcessStep = ({ number, title, desc, deliverable, index }) => (
+    <motion.div 
+        className={`flex flex-col md:flex-row items-start mb-16 relative ${
+            index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+        }`}
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: index * 0.1 }}
+    >
+        {/* Circle & line connector */}
+        <div className="flex flex-col items-center md:w-1/12">
+            <div className="w-10 h-10 bg-accent rounded-full text-white font-bold flex items-center justify-center mb-2">
+                {number}
+            </div>
+            {index < 7 && <div className="w-1 h-full bg-accent/50 md:h-full"></div>}
+        </div>
+
+        {/* Content */}
+        <div className="md:w-11/12 bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all hover:scale-105">
+            <h4 className="text-xl md:text-2xl font-display font-bold mb-2">{title}</h4>
+            <p className="text-gray-600 mb-3">{desc}</p>
+            {deliverable && (
+                <span className="inline-block bg-accent text-white text-sm px-3 py-1 rounded-full font-mono">
+                    Deliverable: {deliverable}
+                </span>
+            )}
+        </div>
+    </motion.div>
+);
+
+const WorkingProcess = () => {
+    const steps = [
+        { title: "Inquiry & Discovery", desc: "Consultation via WhatsApp/Email. Understand business, budget & timeline.", deliverable: "Initial Rough Quotation" },
+        { title: "Proposal & Agreement", desc: "Scope document & Feature list. Contract signing + Advance Payment (20-40%).", deliverable: "Final Agreement" },
+        { title: "Content Collection", desc: "Gathering Logo, Images, Text & Business details.", deliverable: "Brand Assets Received" },
+        { title: "Design Phase", desc: "UI design drafts & Feedback loops.", deliverable: "Approved UI/UX Design" },
+        { title: "Development Phase", desc: "Coding, Responsive Testing, Backend Setup.", deliverable: "Working Preview Link" },
+        { title: "Review + Changes", desc: "User testing & Minor revisions. Speed + Security Optimization.", deliverable: "" },
+        { title: "Final Deployment", desc: "Remaining Payment (60-80%). Domain + Hosting + SSL Setup.", deliverable: "Live Website 🎉" },
+        { title: "Handover & Support", desc: "Admin Training & Documentation. Ownership Transfer.", deliverable: "" },
+    ];
+
+    return (
+        <section id="process" className="py-32 px-8 bg-offWhite">
+            <div className="max-w-7xl mx-auto mb-16 text-center">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-subtle mb-4">
+                    Working Process
+                </h3>
+                <h2 className="text-5xl md:text-6xl font-display font-bold">
+                    Start to End — Professional Workflow
+                </h2>
+            </div>
+
+            <div className="max-w-4xl mx-auto relative">
+                {steps.map((step, idx) => (
+                    <ProcessStep 
+                        key={idx} 
+                        index={idx}
+                        number={idx + 1}
+                        title={step.title}
+                        desc={step.desc}
+                        deliverable={step.deliverable}
+                    />
+                ))}
+            </div>
+        </section>
+    );
+};
+
+
+
+// --- Services List ---
+const ServiceItem = ({ number, title, desc }) => (
+    <div className="border-t border-gray-300 py-12 group hover-trigger hover:bg-white transition-colors duration-500">
+        <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row md:items-baseline gap-8">
+            <span className="text-sm font-mono text-subtle">0{number}</span>
+            <div className="flex-1">
+                <h3 className="text-4xl md:text-5xl font-display font-bold mb-4 group-hover:translate-x-4 transition-transform duration-500">
+                    {title}
+                </h3>
+            </div>
+            <div className="flex-1 max-w-md">
+                <p className="text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                    {desc}
+                </p>
+            </div>
+        </div>
+    </div>
+);
+const Services = () => (
+    <section className="bg-offWhite pb-32">
+        <div className="max-w-7xl mx-auto px-8 mb-16">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-subtle">Services</h3>
+        </div>
+
+        <ServiceItem 
+            number="1"
+            title={<span className="text-lg">🖥️ Full-Stack Web Development</span>}
+            desc={<span className="text-xs">End-to-end website & web app development using React.js, PHP & MySQL. Includes:<br/>✔ Custom Website<br/>✔ Admin Dashboards<br/>✔ Secure Authentication<br/>✔ Database Integration</span>}
+        />
+
+        <ServiceItem 
+            number="2"
+            title={<span className="text-lg">🎯 Business Website & Portfolio Development</span>}
+            desc={<span className="text-xs">Professional & visually appealing websites designed to boost your brand. Ideal For: Businesses | Startups | Freelancers | Event & Service Providers</span>}
+        />
+
+        <ServiceItem 
+            number="3"
+            title={<span className="text-lg">🔐 Secure Role-Based System Development</span>}
+            desc={<span className="text-xs">Multi-user login roles with automated workflows & data protection. Examples: Banking, Hostel, Inventory, HRM systems</span>}
+        />
+
+        <ServiceItem 
+            number="4"
+            title={<span className="text-lg">🧠 AI-Enhanced Web Solutions</span>}
+            desc={<span className="text-xs">Integrate smart features using AI/ML APIs. Examples:<br/>→ Smart Search<br/>→ Chatbots<br/>→ Recommendation Systems</span>}
+        />
+
+        <ServiceItem 
+            number="5"
+            title={<span className="text-lg">🛠️ Backend Development & API Integration</span>}
+            desc={<span className="text-xs">Robust backend logic with PHP, MySQL, MongoDB, REST APIs & JWT Auth. Clean, scalable architecture</span>}
+        />
+
+        <ServiceItem 
+            number="6"
+            title={<span className="text-lg">📱 Responsive UI/UX Development</span>}
+            desc={<span className="text-xs">Modern UI design that works perfectly on all devices. Tools: HTML5, CSS3, JavaScript, Bootstrap, React.js</span>}
+        />
+
+        <ServiceItem 
+            number="7"
+            title={<span className="text-lg">🌐 Website Upgrade & Maintenance</span>}
+            desc={<span className="text-xs">Fix performance/UI issues or add new features. Includes:<br/>✔ Speed Optimization<br/>✔ Bug Fixing<br/>✔ Security Improvements<br/>✔ UI Redesign</span>}
+        />
+
+        <ServiceItem 
+            number="8"
+            title={<span className="text-lg">🎁 Extras (Add-Ons)</span>}
+            desc={<span className="text-xs">⭐ Hosting & Deployment (Vercel / cPanel)<br/>⭐ SEO Optimization<br/>⭐ Domain & Email Setup<br/>⭐ Admin Panel Training</span>}
+        />
+
+        <ServiceItem 
+            number="9"
+            title={<span className="text-lg">🛒 E-Commerce & Payment Gateway Integration</span>}
+            desc={<span className="text-xs">Sell products/services online with secure checkout. Supports: Razorpay, Stripe, PayPal</span>}
+        />
+
+        <ServiceItem 
+            number="10"
+            title={<span className="text-lg">🚀 SEO, Performance & Speed Optimization</span>}
+            desc={<span className="text-xs">Boost search ranking & conversions. Services: Page Speed, Responsive Fixes, SEO Best Practices</span>}
+        />
+
+        <ServiceItem 
+            number="11"
+            title={<span className="text-lg">🛠️ Bug Fixing & Maintenance Support</span>}
+            desc={<span className="text-xs">Regular monitoring & updates to keep your website running smoothly. Plans: Monthly / Quarterly / Yearly</span>}
+        />
+
+        <ServiceItem 
+            number="12"
+            title={<span className="text-lg">🔐 Secure Authentication & User Management</span>}
+            desc={<span className="text-xs">Role-based login systems with advanced security. Tech: JWT | Bcrypt | Session Secure Auth</span>}
+        />
+    </section>
+);
+
+
+
+ // --- Footer ---
+const Footer = () => (
+    <footer id="contact" className="bg-carbon text-offWhite px-8 py-32 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start mb-32">
+                <div>
+                    <h2 className="text-6xl md:text-8xl font-display font-bold leading-none mb-8">
+                        LET'S<br/>CONNECT
+                    </h2>
+                    <a href="mailto:rakeshmali.web@gmail.com" className="hover-trigger text-xl md:text-2xl border-b border-gray-600 hover:border-white hover:text-white transition-all pb-1 inline-block text-gray-400">
+                        rakeshmali.web@gmail.com
+                    </a>
+                </div>
+                <div className="mt-12 md:mt-0 flex flex-col gap-6 text-right">
+                    <a href="https://www.linkedin.com/in/rakeshmali1303/" className="hover-trigger text-lg hover:text-accent transition-colors" target="_blank">LinkedIn ↗</a>
+                    <a href="https://github.com/RakeshMali003" className="hover-trigger text-lg hover:text-accent transition-colors" target="_blank">GitHub ↗</a>
+                    <a href="https://x.com/rakesh_mali03" className="hover-trigger text-lg hover:text-accent transition-colors" target="_blank">Twitter ↗</a>
+                    <a href="tel:+917600404831" className="hover-trigger text-lg hover:text-accent transition-colors">+91 7600404831</a>
+                </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between items-end border-t border-gray-800 pt-8">
+                <p className="text-sm text-gray-500">
+                    &copy; 2025 Rakesh Mali. All rights reserved.<br/>
+                   
+                </p>
+                <button 
+                    onClick={() => window.scrollTo(0,0)} 
+                    className="hover-trigger mt-8 md:mt-0 px-6 py-3 border border-gray-700 rounded-full hover:bg-white hover:text-carbon transition-all uppercase text-xs tracking-widest font-bold"
+                >
+                    Back to Top ↑
+                </button>
+            </div>
+        </div>
+        
+        {/* Big Background Text */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden pointer-events-none opacity-5">
+            <h1 className="text-[20vw] font-display font-bold leading-none translate-y-[20%] text-center">
+                RAKESH
+            </h1>
+        </div>
+    </footer>
+);
+
+
+      const App = () => {
+    return (
+        <div className="antialiased selection:bg-accent selection:text-white">
+            <CustomCursor />
+            <Nav />
+            <Hero />
+            <Ticker />
+            <About />
+            <WorkingProcess />
+            <Experience />   {/* <-- Add here */}
+            <Work />
+            <Services />
+            <Footer />
+        </div>
+    );
+};
+
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
