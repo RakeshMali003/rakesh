@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --text-dark-rgb: 15 23 42;
+        --text-muted-rgb: 71 85 105;
+        --bg-light-rgb: 248 249 250;
+        --bg-panel-rgb: 255 255 255;
+        --border-muted: rgba(15, 23, 42, 0.05);
+    }
+    
+    .dark {
+        --text-dark-rgb: 248 249 250;
+        --text-muted-rgb: 148 163 184;
+        --bg-light-rgb: 11 12 16;
+        --bg-panel-rgb: 21 26 35;
+        --border-muted: rgba(255, 255, 255, 0.05);
+    }
+
+    body { 
+        @apply m-0 bg-lightBg text-textDark font-sans overflow-x-hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Selection styling */
+    ::selection {
+        background-color: #ff5e3a;
+        color: #ffffff;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { 
+        width: 8px; 
+    }
+    ::-webkit-scrollbar-track { 
+        background: rgb(var(--bg-light-rgb)); 
+    }
+    ::-webkit-scrollbar-thumb { 
+        background: var(--border-muted); 
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover { 
+        background: #ff5e3a; 
+    }
+}
+
+@layer components {
+    /* Subtle grid lines background to mimic Framer/Webflow bento structures */
+    .swiss-grid-lines {
+        background-image: 
+            linear-gradient(to right, var(--border-muted) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--border-muted) 1px, transparent 1px);
+        background-size: 40px 40px;
+    }
+
+    /* Bento Panel Grid Cards */
+    .bento-card {
+        background: rgb(var(--bg-panel-rgb));
+        border: 1px solid var(--border-muted);
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.02);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .bento-card:hover {
+        box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .interactive {
+        cursor: pointer;
+    }
+}
